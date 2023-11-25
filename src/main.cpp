@@ -3,20 +3,21 @@
 /*    Module:       main.cpp                                                  */
 /*    Author:       VEX                                                       */
 /*    Created:      Thu Sep 26 2019                                           */
-/*    Description:  Competition Template                                      */
+/*    Description:  Clawbot Competition Template                              */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
 // ---- START VEXCODE CONFIGURED DEVICES ----
 // Robot Configuration:
 // [Name]               [Type]        [Port(s)]
-// leftFront            motor         1               
-// leftBack             motor         2               
-// rightFront           motor         11              
-// rightBack            motor         12              
-// intake               motor         5               
-// flyWheelLeft         motor         8               
-// flyWheelRight        motor         9               
+// intake               motor         9               
+// rightFront           motor         4               
+// rightBack            motor         10              
+// leftFront            motor         18              
+// leftBack             motor         20              
+// flywheelRight        motor         6               
+// flywheelLeft         motor         16              
+// wing                 motor         13              
 // Controller1          controller                    
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
@@ -42,10 +43,15 @@ competition Competition;
 void pre_auton(void) {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
-
+  
   // All activities that occur before the competition starts
   // Example: clearing encoders, setting servo positions, ...
 }
+
+
+float wheelCircumfrence = 4 * 3.14;
+float turnRatio = 295/ 90;
+int motorSpeed = 90;
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
@@ -56,40 +62,50 @@ void pre_auton(void) {
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
+void moveCommand(float distance, int speed) {
+  float motorDegrees = (distance / wheelCircumfrence) * 360;
 
-int wheelCircumfrence = 4 * 3.14; 
-float turnRatio = 570 / 90;
-
-void autoDriveCommand(float driveDistance, int speed){
-  float numberOfRotations = driveDistance / wheelCircumfrence; 
-  int motorDegrees = numberOfRotations * 360; 
-
-  leftFront.startRotateFor(directionType::fwd, motorDegrees, rotationUnits::deg,
-                        speed, velocityUnits::pct);
-  leftBack.startRotateFor(directionType::fwd, motorDegrees, rotationUnits::deg,
-                       speed, velocityUnits::pct);
   rightFront.startRotateFor(directionType::fwd, motorDegrees, rotationUnits::deg,
                         speed, velocityUnits::pct);
-  rightBack.rotateFor(directionType::fwd, motorDegrees, rotationUnits::deg, speed,
-                  velocityUnits::pct);
-}
-
-void autoTurnCommand(int angle, int speed){
-
-  int numberOfDegrees = turnRatio * angle; 
-  leftFront.startRotateFor(directionType::fwd, numberOfDegrees, rotationUnits::deg,
-                        speed, velocityUnits::pct);
-  leftBack.startRotateFor(directionType::fwd, numberOfDegrees, rotationUnits::deg,
+  rightBack.startRotateFor(directionType::fwd, motorDegrees, rotationUnits::deg,
                        speed, velocityUnits::pct);
-  rightFront.startRotateFor(directionType::fwd, -numberOfDegrees, rotationUnits::deg,
-                        speed, velocityUnits::pct);
-  rightBack.rotateFor(directionType::fwd, -numberOfDegrees, rotationUnits::deg, speed,
-                  velocityUnits::pct);
+  leftFront.startRotateFor(directionType::fwd, motorDegrees, rotationUnits::deg,
+                         speed, velocityUnits::pct);
+  leftBack.rotateFor(directionType::fwd, motorDegrees, rotationUnits::deg, speed,
+                    velocityUnits::pct);
 }
 
-void autoOuttakeCommand(int durration, int outtakeSpeed){
-  intake.rotateFor(directionType::fwd, durration, timeUnits::sec,
-                         outtakeSpeed, velocityUnits::pct);
+
+int rightMultiplier; 
+int leftMultiplier; 
+
+void turnCommand(float angle, int speed) {
+  float motorDegrees = turnRatio * angle; 
+
+  if(motorDegrees > 0){
+    leftMultiplier = 1; 
+    rightMultiplier = -1; 
+  }
+
+  else if(motorDegrees < 0){
+    leftMultiplier = 1; 
+    rightMultiplier = -1; 
+  }
+
+  else{
+    leftMultiplier = 0; 
+    rightMultiplier = 0; 
+  }
+
+
+  rightFront.startRotateFor(directionType::fwd, rightMultiplier * motorDegrees, rotationUnits::deg,
+                        speed, velocityUnits::pct);
+  rightBack.startRotateFor(directionType::fwd, rightMultiplier * motorDegrees, rotationUnits::deg,
+                       speed, velocityUnits::pct);
+  leftFront.startRotateFor(directionType::fwd, leftMultiplier * motorDegrees, rotationUnits::deg,
+                         speed, velocityUnits::pct);
+  leftBack.rotateFor(directionType::fwd, leftMultiplier * motorDegrees, rotationUnits::deg, speed,
+                    velocityUnits::pct);
 }
 
 
@@ -97,6 +113,7 @@ void autonomous(void) {
   // ..........................................................................
   // Insert autonomous user code here.
   // ..........................................................................
+  turnCommand(-90, 50); 
 }
 
 /*---------------------------------------------------------------------------*/
@@ -108,13 +125,11 @@ void autonomous(void) {
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
-
-
 void driveCommand(void){
-  leftFront.spin(vex::directionType::fwd, Controller1.Axis3.position() + Controller1.Axis1.position(), vex::velocityUnits::pct); 
-  leftBack.spin(vex::directionType::fwd, Controller1.Axis1.position() + Controller1.Axis1.position(), vex::velocityUnits::pct); 
-  rightFront.spin(vex::directionType::fwd, Controller1.Axis1.position() + Controller1.Axis1.position(), vex::velocityUnits::pct); 
-  rightBack.spin(vex::directionType::fwd, Controller1.Axis1.position() + Controller1.Axis1.position(), vex::velocityUnits::pct); 
+  leftFront.spin(vex::directionType::fwd, Controller1.Axis2.position() - Controller1.Axis1.position(), vex::velocityUnits::pct); 
+  leftBack.spin(vex::directionType::fwd, Controller1.Axis2.position() - Controller1.Axis1.position(), vex::velocityUnits::pct); 
+  rightFront.spin(vex::directionType::fwd, Controller1.Axis2.position() + Controller1.Axis1.position(), vex::velocityUnits::pct); 
+  rightBack.spin(vex::directionType::fwd, Controller1.Axis2.position() + Controller1.Axis1.position(), vex::velocityUnits::pct); 
 }
 
 void intakeCommand(int speed){
@@ -122,12 +137,21 @@ void intakeCommand(int speed){
 }
 
 void flyWheelCommand(int speed){
-  flyWheelRight.spin(vex::directionType::fwd, speed, vex::velocityUnits::pct);
+  flywheelRight.spin(vex::directionType::fwd, speed, vex::velocityUnits::pct);
+  flywheelLeft.spin(vex::directionType::fwd, speed, vex::velocityUnits::pct);
 }
+
+void wingCommand(int speed){
+  wing.spin(vex::directionType::fwd, speed, vex::velocityUnits::pct);
+}
+
+
+
 
 
 int intakeSpeed  = 0; 
 int flywheelSpeed = 0; 
+int wingSpeed = 0; 
 
 void usercontrol(void) {
   // User control code here, inside the loop
@@ -140,25 +164,16 @@ void usercontrol(void) {
     // Insert user code here. This is where you use the joystick values to
     // update your motors, etc.
     // ........................................................................
-    
-    // spinning the intake fast 
+
     if(Controller1.ButtonL1.pressing()){
       intakeSpeed = 100;       
     }
 
-    else if(Controller1.ButtonL1.pressing() ){
+    else if(Controller1.ButtonR1.pressing() ){
       intakeSpeed = -100;       
     }
 
     // ussing intakes for flaps 
-    if(Controller1.ButtonR1.pressing()){
-      intakeSpeed = 50; 
-    }
-
-    else if(Controller1.ButtonR2.pressing()){
-      intakeSpeed = -50;
-    }
-
     else{
       intakeSpeed = 0; 
     }
@@ -167,14 +182,32 @@ void usercontrol(void) {
       flywheelSpeed = 100; 
     }
 
+    else if(Controller1.ButtonB.pressing()){
+      flywheelSpeed = -100; 
+    }
+
     else{
       flywheelSpeed = 0; 
+    }
+
+    if(Controller1.ButtonR2.pressing()){
+      wingSpeed = 100; 
+    }
+
+    else if(Controller1.ButtonL2.pressing()){
+      wingSpeed = -100; 
+    }
+
+    
+    else{
+      wingSpeed = 0; 
     }
 
     intakeCommand(intakeSpeed); 
     driveCommand(); 
     flyWheelCommand(flywheelSpeed); 
-
+    wingCommand(wingSpeed); 
+    
     wait(20, msec); // Sleep the task for a short amount of time to
                     // prevent wasted resources.
   }
